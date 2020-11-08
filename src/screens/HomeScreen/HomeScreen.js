@@ -3,7 +3,7 @@ import {FlatList, Image, Text, TextInput, TouchableOpacity, View} from 'react-na
 import styles from './styles';
 import firebase from '../../Firebase';
 import Application from '../../library/Application';
-import {Header, Rating,} from 'react-native-elements';
+import {Header, Rating} from 'react-native-elements';
 import Geolocation from '@react-native-community/geolocation';
 
 const hotelIcon = require('../../../assets/hotelIcon.png');
@@ -20,23 +20,6 @@ export default function HomeScreen(props) {
     const userID = Application.getDataStore().getUser();
 
     useEffect(() => {
-        // entityRef
-        //     .where("authorID", "==", userID)
-        //     .orderBy('createdAt', 'desc')
-        //     .onSnapshot(
-        //         querySnapshot => {
-        //             const newEntities = [];
-        //             querySnapshot.forEach(doc => {
-        //                 const entity = doc.data();
-        //                 entity.id = doc.id;
-        //                 newEntities.push(entity)
-        //             });
-        //             setEntities(newEntities)
-        //         },
-        //         error => {
-        //             console.log(error);
-        //         }
-        //     )
         entityRef.onSnapshot(snapshot => {
             const entries = [];
             snapshot.forEach(doc => {
@@ -52,7 +35,7 @@ export default function HomeScreen(props) {
             position => {
                 const initialPosition = JSON.stringify(position);
                 Application.getDataStore().persistData(position);
-                alert(initialPosition);
+                // alert(initialPosition);
             },
             error => alert('Error', JSON.stringify(error)),
             {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
@@ -60,35 +43,10 @@ export default function HomeScreen(props) {
     }, []);
 
     const searchDestination = () => {
-        // if (entityText && entityText.length > 0) {
-        //     const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-        //     const data = {
-        //         text: entityText,
-        //         authorID: userID,
-        //         createdAt: timestamp,
-        //     };
-        //     entityRef
-        //         .add(data)
-        //         .then(_doc => {
-        //             setEntityText('');
-        //             Keyboard.dismiss();
-        //         })
-        //         .catch((error) => {
-        //             alert(error);
-        //         });
-        // }
         entityRef
-            .where("destination", "==", entityText)
-            // .orderBy('createdAt', 'desc')
+            .where('destination', '==', entityText)
             .onSnapshot(
                 snapshot => {
-                    // const newEntities = [];
-                    // querySnapshot.forEach(doc => {
-                    //     const entity = doc.data();
-                    //     entity.id = doc.id;
-                    //     newEntities.push(entity)
-                    // });
-                    // setEntities(newEntities)
                     const entries = [];
                     snapshot.forEach(doc => {
                         const entity = doc.data();
@@ -99,8 +57,8 @@ export default function HomeScreen(props) {
                 },
                 error => {
                     console.log(error);
-                }
-            )
+                },
+            );
     };
 
     const getIcon = (type) => {
@@ -137,10 +95,10 @@ export default function HomeScreen(props) {
                             <Text style={[styles.entityTextSmall, {color: '#0AA699'}]}>Price :
                                 ${item.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                             </Text>
-                            {/*<Rating imageSize={15} fractions="{1}" style={{marginLeft: 15}}*/}
-                            {/*        startingValue={item.rate}*/}
-                            {/*        showRating={false}*/}
-                            {/*        starStyle={{backgroundColor: 'transparent'}}/>*/}
+                            <Rating imageSize={15} fractions="{1}" style={{marginLeft: 15}}
+                                    startingValue={item.rate}
+                                    showRating={false}
+                                    starStyle={{backgroundColor: 'transparent'}}/>
                         </View>
                     </View>
                 </View>
@@ -156,7 +114,7 @@ export default function HomeScreen(props) {
                 rightComponent={{
                     icon: 'home',
                     color: '#fff',
-                    onPress: () => props.navigation.navigate('LocalStat'),
+                    onPress: () => props.navigation.navigate('LocationScreen'),
                 }}
             />
             <View style={styles.formContainer}>

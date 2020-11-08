@@ -42,11 +42,13 @@
 // }
 
 import React from 'react';
-import {Dimensions, StyleSheet, Text, View} from 'react-native';
+import {Dimensions, StyleSheet, View} from 'react-native';
 import MapView, {Marker, ProviderPropType} from 'react-native-maps';
 import flagBlueImg from '../../../assets/flag-blue.png';
 import flagPinkImg from '../../../assets/flag-pink.png';
 import {Header} from 'react-native-elements';
+import Application from '../../library/Application';
+
 const {width, height} = Dimensions.get('window');
 
 const ASPECT_RATIO = width / height;
@@ -57,12 +59,30 @@ const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 const SPACE = 0.01;
 
 class MarkerTypes extends React.Component {
+    compID = 'MAP_MAKER';
+
     constructor(props) {
         super(props);
         this.state = {
             marker1: true,
             marker2: false,
+            positions: Application.getDataStore().getGPSInformation(),
         };
+        console.log('coordinate updates : ', Application.getDataStore().getGPSInformation());
+    }
+
+    componentDidMount(): void {
+        Application.getDataStore().subscribeToGPSListener(this.compID, this);
+    }
+
+    componentWillUnmount(): void {
+        Application.getDataStore().unSubscribeFromGPSListener(this.compID);
+    }
+
+    onRecordUpdate(cords: Array) {
+        console.debug('coordinate : ', cords);
+        // alert("CORDS :: "+JSON.stringify(cords));
+        this.setState({positions: cords});
     }
 
     render() {
@@ -76,7 +96,7 @@ class MarkerTypes extends React.Component {
                         onPress: () => this.props.navigation.navigate('Home'),
                     }}
                     containerStyle={{height: 80}}
-                    centerComponent={{text:'Ashan Location Info', style: {color: '#fff'}}}
+                    centerComponent={{text: 'Ashan Location Info', style: {color: '#fff'}}}
                 />
                 <MapView
                     provider={this.props.provider}
@@ -88,39 +108,22 @@ class MarkerTypes extends React.Component {
                         longitudeDelta: LONGITUDE_DELTA,
                     }}
                 >
-                    <Marker
-                        onPress={() => this.setState({marker1: !this.state.marker1})}
-                        coordinate={{
-                            latitude: LATITUDE + SPACE,
-                            longitude: LONGITUDE + SPACE,
-                        }}
-                        centerOffset={{x: -18, y: -60}}
-                        anchor={{x: 0.69, y: 1}}
-                        image={this.state.marker1 ? flagBlueImg : flagPinkImg}
-                    >
-                        <Text style={styles.marker}>X</Text>
-                    </Marker>
-                    <Marker
-                        onPress={() => this.setState({marker2: !this.state.marker2})}
-                        coordinate={{
-                            latitude: LATITUDE - SPACE,
-                            longitude: LONGITUDE - SPACE,
-                        }}
-                        centerOffset={{x: -42, y: -60}}
-                        anchor={{x: 0.84, y: 1}}
-                        image={this.state.marker2 ? flagBlueImg : flagPinkImg}
-                    />
-                    <Marker
-                        onPress={() => this.setState({marker2: !this.state.marker2})}
-                        coordinate={{
-                            latitude: LATITUDE + SPACE,
-                            longitude: LONGITUDE - SPACE,
-                        }}
-                        centerOffset={{x: -42, y: -60}}
-                        anchor={{x: 0.84, y: 1}}
-                        opacity={0.6}
-                        image={this.state.marker2 ? flagBlueImg : flagPinkImg}
-                    />
+                    {this.state.positions.length > 0 &&
+                    this.state.positions.map((item, index) => {
+                        return (
+                            <Marker key={item.uuid}
+                                    onPress={() => this.setState({marker2: !this.state.marker2})}
+                                    coordinate={{
+                                        latitude: item.latitude - SPACE,
+                                        longitude: item.longitude - SPACE,
+                                    }}
+                                    centerOffset={{x: -42, y: -60}}
+                                    anchor={{x: 0.84, y: 1}}
+                                    image={this.state.marker2 ? flagBlueImg : flagPinkImg}
+                            />
+                        );
+                    })
+                    }
                 </MapView>
             </View>
         );
@@ -134,8 +137,6 @@ MarkerTypes.propTypes = {
 const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
-        // justifyContent: 'flex-end',
-        // alignItems: 'center',
         justifyContent: 'flex-start',
         alignItems: 'center',
     },
